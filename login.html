@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OQiLabs Token Interface</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .card {
+            margin-bottom: 20px;
+        }
+        .status-box {
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-5">
+        <h1 class="text-center mb-4">OQiLabs Token Interface</h1>
+        
+        <div id="statusBox" class="status-box disconnected">
+            <h4>Status: Not Connected</h4>
+            <p>Please connect your MetaMask wallet to interact with the OQiLabs token.</p>
+            <button id="connectBtn" class="btn btn-primary">Connect MetaMask</button>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Token Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Token Name:</label>
+                            <input type="text" class="form-control" id="tokenName" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Token Symbol:</label>
+                            <input type="text" class="form-control" id="tokenSymbol" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Total Supply:</label>
+                            <input type="text" class="form-control" id="totalSupply" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Your Balance:</label>
+                            <input type="text" class="form-control" id="userBalance" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Current Mining Reward:</label>
+                            <input type="text" class="form-control" id="currentReward" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Next Mining Available:</label>
+                            <input type="text" class="form-control" id="nextMining" readonly>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Tokens Locked Until:</label>
+                            <input type="text" class="form-control" id="lockUntil" readonly>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Mine Tokens</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Mining Fee: 0.002 ETH</label>
+                        </div>
+                        <button id="mineBtn" class="btn btn-success w-100" disabled>Mine Tokens</button>
+                        <div id="miningStatus" class="mt-3"></div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>Transfer Tokens</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Recipient Address:</label>
+                            <input type="text" class="form-control" id="recipientAddress">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amount:</label>
+                            <input type="number" class="form-control" id="transferAmount">
+                        </div>
+                        <button id="transferBtn" class="btn btn-primary w-100" disabled>Transfer</button>
+                        <div id="transferStatus" class="mt-3"></div>
+                    </div>
+                </div>
+
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5>Approve Tokens</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Spender Address:</label>
+                            <input type="text" class="form-control" id="spenderAddress">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Amount:</label>
+                            <input type="number" class="form-control" id="approveAmount">
+                        </div>
+                        <button id="approveBtn" class="btn btn-warning w-100" disabled>Approve</button>
+                        <div id="approveStatus" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
+    <script>
+        // Contract ABI - Generated from your Solidity code
+        const contractABI = [
+            {
+                "inputs": [],
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                ],
+                "name": "Approval",
+                "type": "event"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "internalType": "uint256",
+                        "name": "value",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Transfer",
+                "type": "event"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "owner",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    }
+                ],
+                "name": "allowance",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "approve",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "burn",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [
+                    {
+                        "internalType": "uint8",
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "deployer",
+                "outputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "getCurrentReward",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "initialTimestamp",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "lastMinedTime",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "name": "lockUntil",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "MAX_SUPPLY",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "mine",
+                "outputs": [],
+                "stateMutability": "payable",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "miningCooldown",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "MINING_FEE",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "name",
+                "outputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "symbol",
+                "outputs": [
+                    {
+                        "internalType": "string",
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [
+                    {
+                        "internalType": "uint256",
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "inputs": [
+                    {
+                        "internalType": "address",
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "address",
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amount",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferFrom",
+                "outputs": [
+                    {
+                        "internalType": "bool",
+                        "name": "",
+                        "type": "bool"
+                    }
+                ],
+                "stateMutability": "nonpayable",
+                "type": "function"
+            }
+        ];
+
+        // Replace with your actual contract address
+        const contractAddress = "0x282a57943362699b493033D750A0E3F0566539a3";
+        
+        let web3;
+        let contract;
+        let accounts = [];
+        let isConnected = false;
+
+        // Initialize the application
+        window.addEventListener('load', async () => {
+            await initWeb3();
+            setupEventListeners();
+        });
+
+        // Initialize Web3 and connect to MetaMask
+        async function initWeb3() {
+            if (window.ethereum) {
+                web3 = new Web3(window.ethereum);
+                try {
+                    // Request account access
+                    accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                    isConnected = true;
+                    updateUI();
+                    
+                    // Create contract instance
+                    contract = new web3.eth.Contract(contractABI, contractAddress);
+                    
+                    // Load token data
+                    loadTokenData();
+                    
+                    // Set up account change listener
+                    window.ethereum.on('accountsChanged', (newAccounts) => {
+                        accounts = newAccounts;
+                        updateUI();
+                        loadTokenData();
+                    });
+                    
+                    // Set up chain change listener
+                    window.ethereum.on('chainChanged', () => {
+                        window.location.reload();
+                    });
+                    
+                } catch (error) {
+                    console.error("User denied account access", error);
+                }
+            } else {
+                alert('Please install MetaMask to use this dApp!');
+            }
+        }
+
+        // Set up event listeners for buttons
+        function setupEventListeners() {
+            document.getElementById('connectBtn').addEventListener('click', async () => {
+                if (!isConnected) {
+                    await initWeb3();
+                }
+            });
+            
+            document.getElementById('mineBtn').addEventListener('click', mineTokens);
+            document.getElementById('transferBtn').addEventListener('click', transferTokens);
+            document.getElementById('approveBtn').addEventListener('click', approveTokens);
+        }
+
+        // Update UI based on connection status
+        function updateUI() {
+            const statusBox = document.getElementById('statusBox');
+            const connectBtn = document.getElementById('connectBtn');
+            
+            if (isConnected) {
+                statusBox.className = 'status-box connected';
+                statusBox.innerHTML = `
+                    <h4>Status: Connected</h4>
+                    <p>Account: ${accounts[0]}</p>
+                `;
+                
+                // Enable buttons
+                document.getElementById('mineBtn').disabled = false;
+                document.getElementById('transferBtn').disabled = false;
+                document.getElementById('approveBtn').disabled = false;
+            } else {
+                statusBox.className = 'status-box disconnected';
+                statusBox.innerHTML = `
+                    <h4>Status: Not Connected</h4>
+                    <p>Please connect your MetaMask wallet to interact with the OQiLabs token.</p>
+                    <button id="connectBtn" class="btn btn-primary">Connect MetaMask</button>
+                `;
+                
+                // Re-attach event listener to new button
+                document.getElementById('connectBtn').addEventListener('click', async () => {
+                    await initWeb3();
+                });
+            }
+        }
+
+        // Load token data from contract
+        async function loadTokenData() {
+            if (!isConnected) return;
+            
+            try {
+                // Basic token info
+                const name = await contract.methods.name().call();
+                const symbol = await contract.methods.symbol().call();
+                const totalSupply = await contract.methods.totalSupply().call();
+                const maxSupply = await contract.methods.MAX_SUPPLY().call();
+                const decimals = await contract.methods.decimals().call();
+                
+                document.getElementById('tokenName').value = name;
+                document.getElementById('tokenSymbol').value = symbol;
+                document.getElementById('totalSupply').value = `${formatNumber(totalSupply / (10 ** decimals))} / ${formatNumber(maxSupply / (10 ** decimals))}`;
+                
+                // User-specific info
+                const balance = await contract.methods.balanceOf(accounts[0]).call();
+                const currentReward = await contract.methods.getCurrentReward().call();
+                const lastMined = await contract.methods.lastMinedTime(accounts[0]).call();
+                const lockUntil = await contract.methods.lockUntil(accounts[0]).call();
+                
+                document.getElementById('userBalance').value = formatNumber(balance / (10 ** decimals));
+                document.getElementById('currentReward').value = formatNumber(currentReward / (10 ** decimals));
+                
+                // Calculate next mining time
+                const now = Math.floor(Date.now() / 1000);
+                const nextMining = lastMined > 0 ? parseInt(lastMined) + 57600 : 0;
+                const miningAvailable = nextMining <= now;
+                
+                document.getElementById('nextMining').value = miningAvailable ? 
+                    "Available now" : 
+                    new Date(nextMining * 1000).toLocaleString();
+                
+                // Lock status
+                document.getElementById('lockUntil').value = lockUntil > 0 ? 
+                    new Date(lockUntil * 1000).toLocaleString() : 
+                    "Not locked";
+                
+                // Enable/disable mine button based on cooldown
+                document.getElementById('mineBtn').disabled = !miningAvailable;
+                
+            } catch (error) {
+                console.error("Error loading token data:", error);
+            }
+        }
+
+        // Mine tokens function
+        async function mineTokens() {
+            if (!isConnected) return;
+            
+            const miningStatus = document.getElementById('miningStatus');
+            miningStatus.innerHTML = '<div class="alert alert-info">Processing mining transaction...</div>';
+            
+            try {
+                const miningFee = await contract.methods.MINING_FEE().call();
+                const miningFeeEth = web3.utils.fromWei(miningFee, 'ether');
+                
+                await contract.methods.mine().send({
+                    from: accounts[0],
+                    value: miningFee
+                })
+                .on('transactionHash', (hash) => {
+                    miningStatus.innerHTML = `<div class="alert alert-info">Transaction sent: ${hash}</div>`;
+                })
+                .on('receipt', (receipt) => {
+                    miningStatus.innerHTML = '<div class="alert alert-success">Mining successful!</div>';
+                    loadTokenData(); // Refresh data
+                })
+                .on('error', (error) => {
+                    miningStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                });
+                
+            } catch (error) {
+                miningStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Transfer tokens function
+        async function transferTokens() {
+            if (!isConnected) return;
+            
+            const transferStatus = document.getElementById('transferStatus');
+            const recipient = document.getElementById('recipientAddress').value;
+            const amount = document.getElementById('transferAmount').value;
+            const decimals = await contract.methods.decimals().call();
+            
+            if (!recipient || !amount) {
+                transferStatus.innerHTML = '<div class="alert alert-warning">Please fill all fields</div>';
+                return;
+            }
+            
+            transferStatus.innerHTML = '<div class="alert alert-info">Processing transfer...</div>';
+            
+            try {
+                const amountWei = web3.utils.toWei(amount, 'ether');
+                // Adjust for token decimals (assuming 8 decimals)
+                const amountWithDecimals = amount * (10 ** decimals);
+                
+                await contract.methods.transfer(recipient, amountWithDecimals.toString())
+                    .send({ from: accounts[0] })
+                    .on('transactionHash', (hash) => {
+                        transferStatus.innerHTML = `<div class="alert alert-info">Transaction sent: ${hash}</div>`;
+                    })
+                    .on('receipt', (receipt) => {
+                        transferStatus.innerHTML = '<div class="alert alert-success">Transfer successful!</div>';
+                        loadTokenData(); // Refresh data
+                    })
+                    .on('error', (error) => {
+                        transferStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                    });
+                
+            } catch (error) {
+                transferStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Approve tokens function
+        async function approveTokens() {
+            if (!isConnected) return;
+            
+            const approveStatus = document.getElementById('approveStatus');
+            const spender = document.getElementById('spenderAddress').value;
+            const amount = document.getElementById('approveAmount').value;
+            const decimals = await contract.methods.decimals().call();
+            
+            if (!spender || !amount) {
+                approveStatus.innerHTML = '<div class="alert alert-warning">Please fill all fields</div>';
+                return;
+            }
+            
+            approveStatus.innerHTML = '<div class="alert alert-info">Processing approval...</div>';
+            
+            try {
+                const amountWei = web3.utils.toWei(amount, 'ether');
+                // Adjust for token decimals (assuming 8 decimals)
+                const amountWithDecimals = amount * (10 ** decimals);
+                
+                await contract.methods.approve(spender, amountWithDecimals.toString())
+                    .send({ from: accounts[0] })
+                    .on('transactionHash', (hash) => {
+                        approveStatus.innerHTML = `<div class="alert alert-info">Transaction sent: ${hash}</div>`;
+                    })
+                    .on('receipt', (receipt) => {
+                        approveStatus.innerHTML = '<div class="alert alert-success">Approval successful!</div>';
+                    })
+                    .on('error', (error) => {
+                        approveStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                    });
+                
+            } catch (error) {
+                approveStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+            }
+        }
+
+        // Helper function to format numbers
+        function formatNumber(num) {
+            return parseFloat(num).toLocaleString(undefined, {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 8
+            });
+        }
+    </script>
+</body>
+</html>
