@@ -1,159 +1,226 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>OQILabs - GPU & Web3 Mining</title>
-
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-  <!-- Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-  <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/style.css">
-
+  <link rel="icon" href="images/logo.png" type="image/png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Poppins', sans-serif;
     }
-    .hero_bg_box img {
-      width: 100%;
-      height: auto;
+
+    .navbar {
+      background: linear-gradient(to right, #000000, #2c3e50);
     }
-    .heading_center {
+
+    .navbar-brand span {
+      color: white;
+      font-weight: bold;
+      font-size: 24px;
+    }
+
+    .navbar-nav .nav-link {
+      color: white !important;
+      font-weight: 500;
+      margin-right: 15px;
+    }
+
+    .navbar-nav .nav-link:hover {
+      color: #ffd700 !important;
+    }
+
+    .hero_area {
+      position: relative;
+      background: url('images/hero-bg.png') no-repeat center center/cover;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      color: white;
       text-align: center;
-      margin-bottom: 40px;
     }
-    .highlight {
-      margin-top: 20px;
+
+    .about_section, .why_section, .info_section {
+      padding: 60px 0;
     }
-    .highlight ul,
-    .diamond-list {
-      padding-left: 20px;
+
+    .about_section h1 {
+      font-size: 28px;
+      color: #2c3e50;
     }
-    .highlight li {
-      margin-bottom: 10px;
+
+    .highlight h2, .highlight h3 {
+      color: #0e2d4b;
     }
-    .contact, .hashtags {
-      margin-top: 30px;
+
+    ul.checklist li, ul.diamond-list li {
+      margin-bottom: 8px;
     }
+
     .footer_section {
-      background: #111;
-      color: #fff;
+      background-color: #111;
+      color: white;
       padding: 20px 0;
       text-align: center;
     }
+
+    .info_section h4 {
+      color: #ffd700;
+      margin-bottom: 15px;
+    }
+
+    .contact_link_box a {
+      display: block;
+      color: #fff;
+      margin-bottom: 5px;
+      text-decoration: none;
+    }
+
+    .contact p, .hashtags p {
+      margin-top: 20px;
+      font-size: 16px;
+    }
+
+    .btn-primary {
+      background-color: #ffd700;
+      border: none;
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      background-color: #ffcc00;
+    }
+
+    @media (max-width: 768px) {
+      .hero_area {
+        height: auto;
+        padding: 60px 0;
+      }
+    }
   </style>
 </head>
-
 <body>
 
-  <!-- Hero Section -->
   <div class="hero_area">
-    <div class="hero_bg_box">
-      <div class="bg_img_box">
-        <img src="images/hero-bg.png" alt="Hero Background">
-      </div>
-    </div>
-
     <!-- Header -->
-    <header class="header_section">
-      <div class="container-fluid">
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-          <a class="navbar-brand" href="index.html">
-            <img src="images/logo.png" alt="OQILabs Logo" style="height: 50px;"> <span class="ml-2">OQILabs</span>
-          </a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-        </nav>
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+      <div class="container">
+        <a class="navbar-brand" href="#">
+          <img src="images/logo.png" alt="OQILabs Logo" style="height: 50px;">
+          <span>OQILabs</span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+          <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="#about">About</a></li>
+            <li class="nav-item"><a class="nav-link" href="#services">Services</a></li>
+            <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+          </ul>
+        </div>
       </div>
-    </header>
+    </nav>
   </div>
 
-  <!-- About Section -->
-  <section class="about_section layout_padding py-5">
+  <!-- About -->
+  <section class="about_section" id="about">
     <div class="container">
-      <div class="heading_container heading_center">
+      <div class="heading_container text-center mb-4">
         <h2>About <span>Us</span></h2>
       </div>
       <div class="row">
-        <div class="col-md-6 mb-4">
-          <img src="images/about-img.png" alt="About Us" class="img-fluid">
+        <div class="col-md-6">
+          <img src="images/about-img.png" alt="" class="img-fluid">
         </div>
         <div class="col-md-6">
-          <h1>OQILabs: GPU Tradingal Mining & Web3 Mining Solutions</h1>
-          <p><strong>OQILabs</strong> bridges traditional GPU mining with next-gen <strong>Web3 mining</strong>, offering top hardware and Web3 integrations for crypto users.</p>
+          <h1>OQILabs: GPU & Web3 Mining Solutions</h1>
+          <p>At <strong>OQILabs</strong>, we bridge the gap between traditional GPU mining and next-gen <strong>Web3 mining</strong>, offering powerful hardware and seamless software solutions.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Why Choose Us Section -->
-  <section class="why_section layout_padding bg-light py-5">
+  <!-- Why Choose Us -->
+  <section class="why_section bg-light" id="services">
     <div class="container">
-      <div class="heading_container heading_center">
+      <div class="heading_container text-center mb-4">
         <h2>Why Choose <span>Us</span></h2>
       </div>
-
       <div class="highlight">
-        <h4>1. GPU Tradingal Mining</h4>
-        <p>We provide <strong>high-performance GPU rigs</strong> for PoW and other algorithms.</p>
-        <ul>
-          <li>High Hash Rate Rigs – ETH, BTC, KAS and more.</li>
-          <li>Energy-Efficient – Max ROI, low consumption.</li>
-          <li>Scalable – Personal to industrial scale.</li>
-          <li>24/7 Monitoring & Support.</li>
+        <h2>Our Core Offerings:</h2>
+
+        <h3>1. GPU Tradingal Mining</h3>
+        <p>We provide <strong>high-performance GPU mining rigs</strong> optimized for PoW algorithms.</p>
+        <ul class="checklist">
+          <li>High Hash Rate Rigs – ETH, BTC, KAS & more</li>
+          <li>Energy Efficient – High ROI</li>
+          <li>Scalable Farms – Home to industrial scale</li>
+          <li>24/7 Monitoring & Support</li>
         </ul>
-      </div>
 
-      <div class="highlight">
-        <h4>2. Web3 Mining</h4>
-        <p>Decentralized mining via MetaMask, Trust Wallet, and dApps.</p>
+        <h3>2. Web3 Mining</h3>
+        <p>Mine via <strong>MetaMask, Trust Wallet</strong> & browser without heavy hardware.</p>
         <ul class="diamond-list">
-          <li>No Hardware Needed – Browser-based mining.</li>
-          <li>Staking & DeFi – Earn passively.</li>
-          <li>Wallet Integration – Mine with MetaMask.</li>
-          <li>Low Entry Barrier – Easy for all users.</li>
+          <li>No Hardware Needed</li>
+          <li>Staking & Cloud Mining</li>
+          <li>Web3 Wallet Integration</li>
+          <li>Beginner Friendly</li>
         </ul>
       </div>
 
-      <h4 class="mt-4">Why OQILabs?</h4>
+      <h2 class="mt-4">Why Choose OQILabs?</h2>
       <ul>
-        <li>Hybrid Mining – Hardware + Web3.</li>
-        <li>Secure & Transparent – Trustless rewards.</li>
-        <li>Custom Solutions – For individuals and enterprises.</li>
+        <li>Hybrid Solutions: Hardware + Web3</li>
+        <li>Secure & Transparent Mining</li>
+        <li>Custom Solutions for Individuals & Enterprises</li>
       </ul>
+    </div>
+  </section>
+
+  <!-- Info / Contact -->
+  <section class="info_section layout_padding2" id="contact">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-6 col-lg-3 info_col">
+          <h4>Address</h4>
+          <div class="contact_link_box">
+            <a href="#"><i class="fa fa-map-marker-alt"></i> Location</a>
+            <a href="mailto:OQilabs@protonmail.com"><i class="fa fa-envelope"></i> OQilabs@protonmail.com</a>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-3 info_col">
+          <h4>Info</h4>
+          <p>Offering mining solutions across GPU and Web3 with integrated wallet support.</p>
+        </div>
+        <div class="col-md-6 col-lg-2 mx-auto info_col">
+          <h4>Links</h4>
+          <a href="#">Home</a><br>
+          <a href="#about">About</a><br>
+          <a href="#services">Services</a><br>
+          <a href="#contact">Contact</a>
+        </div>
+        <div class="col-md-6 col-lg-3 info_col">
+          <h4>Follow</h4>
+          <div>
+            <a href="#"><i class="fab fa-facebook-f text-white me-2"></i></a>
+            <a href="#"><i class="fab fa-twitter text-white me-2"></i></a>
+            <a href="#"><i class="fab fa-instagram text-white me-2"></i></a>
+            <a href="#"><i class="fab fa-linkedin text-white"></i></a>
+          </div>
+        </div>
+      </div>
 
       <div class="contact">
         <p><strong>📧 Contact:</strong> OQilabs@protonmail.com</p>
       </div>
-      <div class="hashtags">
-        <p>#GPUMining #Web3Mining #Crypto #Blockchain #MetaMaskMining #DeFi #Oqilabs</p>
-      </div>
-    </div>
-  </section>
 
-  <!-- Info Section -->
-  <section class="info_section layout_padding2 py-5 text-light bg-dark">
-    <div class="container">
-      <div class="row">
-        <div class="col-md-6 col-lg-3 mb-4">
-          <h5>Address</h5>
-          <p><i class="fa fa-envelope"></i> OQilabs@protonmail.com</p>
-        </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-          <h5>Info</h5>
-          <p>GPU & Web3 Mining Expertise</p>
-        </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-          <h5>Links</h5>
-          <a href="index.html" class="text-light">Home</a>
-        </div>
-        <div class="col-md-6 col-lg-3 mb-4">
-          <h5>######</h5>
-          <p>Custom section</p>
-        </div>
+      <div class="hashtags text-center mt-3">
+        <p>#GPUMining #Web3Mining #Crypto #MetaMaskMining #DeFi #Blockchain #OQILabs</p>
       </div>
     </div>
   </section>
@@ -161,12 +228,11 @@
   <!-- Footer -->
   <section class="footer_section">
     <div class="container">
-      <p>&copy; 2025 OQILabs. All Rights Reserved.</p>
+      <p>&copy; 2025 OQILabs. All rights reserved.</p>
     </div>
   </section>
 
   <!-- Scripts -->
-  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
