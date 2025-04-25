@@ -3,124 +3,181 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OQiLabs Token Interface</title>
+    <title>OQiLabs Token Wallet</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js"></script>
     <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #212529;
+            --card-bg: #f8f9fa;
+            --input-bg: #ffffff;
+        }
+        
+        [data-bs-theme="dark"] {
+            --bg-color: #212529;
+            --text-color: #f8f9fa;
+            --card-bg: #2c3034;
+            --input-bg: #343a40;
+        }
+        
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
         .card {
-            margin-bottom: 20px;
+            background-color: var(--card-bg);
+            border: none;
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
         }
-        .status-box {
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+        
+        .form-control, .form-select {
+            background-color: var(--input-bg);
+            color: var(--text-color);
         }
-        .connected {
-            background-color: #d4edda;
-            color: #155724;
+        
+        .theme-toggle {
+            cursor: pointer;
         }
-        .disconnected {
-            background-color: #f8d7da;
-            color: #721c24;
+        
+        .qr-container {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            display: inline-block;
+            margin: 1rem 0;
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+        }
+        
+        #errorModal .modal-body {
+            max-height: 60vh;
+            overflow-y: auto;
         }
     </style>
 </head>
 <body>
-    <div class="container py-5">
-        <h1 class="text-center mb-4">OQiLabs Token Interface</h1>
-        
-        <div id="statusBox" class="status-box disconnected">
-            <h4>Status: Not Connected</h4>
-            <p>Please connect your MetaMask wallet to interact with the OQiLabs token.</p>
-            <button id="connectBtn" class="btn btn-primary">Connect MetaMask</button>
+    <!-- Header -->
+    <header class="navbar navbar-expand-lg bg-body-tertiary sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">OQiLabs Wallet</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <button id="themeToggle" class="btn nav-link theme-toggle">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item">
+                        <button id="loginBtn" class="btn nav-link">Connect Wallet</button>
+                    </li>
+                </ul>
+            </div>
         </div>
+    </header>
 
+    <!-- Main Content -->
+    <main class="container my-4 flex-grow-1">
         <div class="row">
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Token Information</h5>
+            <div class="col-lg-6 mx-auto">
+                <!-- Balance Card -->
+                <div class="card mb-4">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Your OQi Balance</h5>
+                        <h2 id="tokenBalance" class="display-4 my-3">0.00</h2>
+                        <div class="d-flex justify-content-center gap-2">
+                            <span id="lockStatus" class="badge bg-warning status-badge">Locked</span>
+                            <span id="cooldownStatus" class="badge bg-info status-badge">Cooldown</span>
+                        </div>
                     </div>
+                </div>
+
+                <!-- Deposit Card -->
+                <div class="card mb-4">
                     <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Token Name:</label>
-                            <input type="text" class="form-control" id="tokenName" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Token Symbol:</label>
-                            <input type="text" class="form-control" id="tokenSymbol" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Total Supply:</label>
-                            <input type="text" class="form-control" id="totalSupply" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Your Balance:</label>
-                            <input type="text" class="form-control" id="userBalance" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Current Mining Reward:</label>
-                            <input type="text" class="form-control" id="currentReward" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Next Mining Available:</label>
-                            <input type="text" class="form-control" id="nextMining" readonly>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Tokens Locked Until:</label>
-                            <input type="text" class="form-control" id="lockUntil" readonly>
+                        <h5 class="card-title">Deposit</h5>
+                        <div class="text-center">
+                            <div id="qrCode" class="qr-container mb-3"></div>
+                            <p>Scan QR code to deposit</p>
+                            <div class="input-group mb-3">
+                                <input type="text" id="walletAddress" class="form-control" readonly>
+                                <button class="btn btn-outline-secondary" onclick="copyAddress()">
+                                    <i class="bi bi-clipboard"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="d-grid gap-3">
+                    <button id="mineBtn" class="btn btn-primary btn-lg" disabled>
+                        <i class="bi bi-hammer"></i> Mine Tokens
+                    </button>
+                    <button id="transferBtn" class="btn btn-success btn-lg" disabled>
+                        <i class="bi bi-send"></i> Transfer
+                    </button>
                 </div>
             </div>
+        </div>
+    </main>
 
-            <div class="col-md-6">
-                <div class="card">
-                    <div class="card-header">
-                        <h5>Mine Tokens</h5>
+    <!-- Footer -->
+    <footer class="py-3 mt-auto">
+        <div class="container text-center">
+            <small>OQiLabs Token Wallet &copy; 2023</small>
+        </div>
+    </footer>
+
+    <!-- Transfer Modal -->
+    <div class="modal fade" id="transferModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Transfer OQi Tokens</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Recipient Address</label>
+                        <input type="text" id="recipientAddress" class="form-control" placeholder="0x...">
                     </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Mining Fee: 0.002 ETH</label>
-                        </div>
-                        <button id="mineBtn" class="btn btn-success w-100" disabled>Mine Tokens</button>
-                        <div id="miningStatus" class="mt-3"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Amount</label>
+                        <input type="number" id="transferAmount" class="form-control" placeholder="0.00">
                     </div>
                 </div>
-
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5>Transfer Tokens</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Recipient Address:</label>
-                            <input type="text" class="form-control" id="recipientAddress">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Amount:</label>
-                            <input type="number" class="form-control" id="transferAmount">
-                        </div>
-                        <button id="transferBtn" class="btn btn-primary w-100" disabled>Transfer</button>
-                        <div id="transferStatus" class="mt-3"></div>
-                    </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" id="confirmTransferBtn" class="btn btn-primary">Transfer</button>
                 </div>
+            </div>
+        </div>
+    </div>
 
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5>Approve Tokens</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Spender Address:</label>
-                            <input type="text" class="form-control" id="spenderAddress">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Amount:</label>
-                            <input type="number" class="form-control" id="approveAmount">
-                        </div>
-                        <button id="approveBtn" class="btn btn-warning w-100" disabled>Approve</button>
-                        <div id="approveStatus" class="mt-3"></div>
-                    </div>
+    <!-- Error Modal -->
+    <div class="modal fade" id="errorModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Error</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p id="errorMessage"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>
@@ -129,641 +186,274 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/web3@1.8.0/dist/web3.min.js"></script>
     <script>
-        // Contract ABI - Generated from your Solidity code
-     const contractABI = [
-    {
-        "inputs": [],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "spender",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint256",
-                "name": "value",
-                "type": "uint256"
-            }
-        ],
-        "name": "Approval",
-        "type": "event"
-    },
-   
-            {
-                "anonymous": false,
-                "inputs": [
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "from",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": true,
-                        "internalType": "address",
-                        "name": "to",
-                        "type": "address"
-                    },
-                    {
-                        "indexed": false,
-                        "internalType": "uint256",
-                        "name": "value",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "Transfer",
-                "type": "event"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "owner",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "spender",
-                        "type": "address"
-                    }
-                ],
-                "name": "allowance",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "spender",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "approve",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "name": "balanceOf",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "from",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "burn",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "decimals",
-                "outputs": [
-                    {
-                        "internalType": "uint8",
-                        "name": "",
-                        "type": "uint8"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "deployer",
-                "outputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "getCurrentReward",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "initialTimestamp",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "name": "lastMinedTime",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "",
-                        "type": "address"
-                    }
-                ],
-                "name": "lockUntil",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "MAX_SUPPLY",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "mine",
-                "outputs": [],
-                "stateMutability": "payable",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "miningCooldown",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "MINING_FEE",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "name",
-                "outputs": [
-                    {
-                        "internalType": "string",
-                        "name": "",
-                        "type": "string"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "symbol",
-                "outputs": [
-                    {
-                        "internalType": "string",
-                        "name": "",
-                        "type": "string"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [],
-                "name": "totalSupply",
-                "outputs": [
-                    {
-                        "internalType": "uint256",
-                        "name": "",
-                        "type": "uint256"
-                    }
-                ],
-                "stateMutability": "view",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "to",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "transfer",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            },
-            {
-                "inputs": [
-                    {
-                        "internalType": "address",
-                        "name": "from",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "address",
-                        "name": "to",
-                        "type": "address"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amount",
-                        "type": "uint256"
-                    }
-                ],
-                "name": "transferFrom",
-                "outputs": [
-                    {
-                        "internalType": "bool",
-                        "name": "",
-                        "type": "bool"
-                    }
-                ],
-                "stateMutability": "nonpayable",
-                "type": "function"
-            }
-        ];
-
-        // Replace with your actual contract address
+        // Contract details
         const contractAddress = "0x282a57943362699b493033D750A0E3F0566539a3";
-        
+        const contractABI = [{"inputs":[],"stateMutability":"nonpayable","type":"constructor"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"owner","type":"address"},{"indexed":true,"internalType":"address","name":"spender","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Approval","type":"event"},{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"from","type":"address"},{"indexed":true,"internalType":"address","name":"to","type":"address"},{"indexed":false,"internalType":"uint256","name":"value","type":"uint256"}],"name":"Transfer","type":"event"},{"inputs":[{"internalType":"address","name":"owner","type":"address"},{"internalType":"address","name":"spender","type":"address"}],"name":"allowance","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"spender","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"approve","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"balanceOf","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"burn","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[],"name":"decimals","outputs":[{"internalType":"uint8","name":"","type":"uint8"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"deployer","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"getCurrentReward","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"initialTimestamp","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"lastMinedTime","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"","type":"address"}],"name":"lockUntil","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MAX_SUPPLY","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"mine","outputs":[],"stateMutability":"payable","type":"function"},{"inputs":[],"name":"miningCooldown","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"MINING_FEE","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"name","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"symbol","outputs":[{"internalType":"string","name":"","type":"string"}],"stateMutability":"view","type":"function"},{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},{"inputs":[{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},{"inputs":[{"internalType":"address","name":"from","type":"address"},{"internalType":"address","name":"to","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"transferFrom","outputs":[{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}];
+
+        // App state
         let web3;
         let contract;
-        let accounts = [];
+        let account;
         let isConnected = false;
+        const decimals = 8;
 
-        // Initialize the application
-        window.addEventListener('load', async () => {
-            await initWeb3();
+        // DOM Elements
+        const loginBtn = document.getElementById('loginBtn');
+        const mineBtn = document.getElementById('mineBtn');
+        const transferBtn = document.getElementById('transferBtn');
+        const confirmTransferBtn = document.getElementById('confirmTransferBtn');
+        const tokenBalance = document.getElementById('tokenBalance');
+        const walletAddress = document.getElementById('walletAddress');
+        const lockStatus = document.getElementById('lockStatus');
+        const cooldownStatus = document.getElementById('cooldownStatus');
+        const themeToggle = document.getElementById('themeToggle');
+        const errorModal = new bootstrap.Modal(document.getElementById('errorModal'));
+        const transferModal = new bootstrap.Modal(document.getElementById('transferModal'));
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
             setupEventListeners();
+            generateQRCode();
+            await checkWalletConnection();
         });
 
-        // Initialize Web3 and connect to MetaMask
-        async function initWeb3() {
+        function setupEventListeners() {
+            loginBtn.addEventListener('click', toggleWalletConnection);
+            mineBtn.addEventListener('click', mineTokens);
+            transferBtn.addEventListener('click', () => transferModal.show());
+            confirmTransferBtn.addEventListener('click', executeTransfer);
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+
+        // Theme management
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-bs-theme', newTheme);
+            themeToggle.innerHTML = newTheme === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+            localStorage.setItem('theme', newTheme);
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-bs-theme', savedTheme);
+            themeToggle.innerHTML = savedTheme === 'dark' ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>';
+        }
+
+        // Wallet connection
+        async function checkWalletConnection() {
             if (window.ethereum) {
                 web3 = new Web3(window.ethereum);
                 try {
-                    // Request account access
-                    accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                    isConnected = true;
-                    updateUI();
-                    
-                    // Create contract instance
-                    contract = new web3.eth.Contract(contractABI, contractAddress);
-                    
-                    // Load token data
-                    loadTokenData();
-                    
-                    // Set up account change listener
-                    window.ethereum.on('accountsChanged', (newAccounts) => {
-                        accounts = newAccounts;
+                    const accounts = await web3.eth.getAccounts();
+                    if (accounts.length > 0) {
+                        account = accounts[0];
+                        isConnected = true;
                         updateUI();
-                        loadTokenData();
-                    });
-                    
-                    // Set up chain change listener
-                    window.ethereum.on('chainChanged', () => {
-                        window.location.reload();
-                    });
-                    
+                        initContract();
+                        await loadTokenData();
+                    }
                 } catch (error) {
-                    console.error("User denied account access", error);
+                    showError(error);
                 }
-            } else {
-                alert('Please install MetaMask to use this dApp!');
             }
         }
 
-        // Set up event listeners for buttons
-        function setupEventListeners() {
-            document.getElementById('connectBtn').addEventListener('click', async () => {
-                if (!isConnected) {
-                    await initWeb3();
-                }
-            });
-            
-            document.getElementById('mineBtn').addEventListener('click', mineTokens);
-            document.getElementById('transferBtn').addEventListener('click', transferTokens);
-            document.getElementById('approveBtn').addEventListener('click', approveTokens);
+        async function toggleWalletConnection() {
+            if (!isConnected) {
+                await connectWallet();
+            } else {
+                await disconnectWallet();
+            }
         }
 
-        // Update UI based on connection status
-        function updateUI() {
-            const statusBox = document.getElementById('statusBox');
-            const connectBtn = document.getElementById('connectBtn');
-            
-            if (isConnected) {
-                statusBox.className = 'status-box connected';
-                statusBox.innerHTML = `
-                    <h4>Status: Connected</h4>
-                    <p>Account: ${accounts[0]}</p>
-                `;
+        async function connectWallet() {
+            try {
+                if (!window.ethereum) {
+                    throw new Error("MetaMask not installed");
+                }
                 
-                // Enable buttons
-                document.getElementById('mineBtn').disabled = false;
-                document.getElementById('transferBtn').disabled = false;
-                document.getElementById('approveBtn').disabled = false;
-            } else {
-                statusBox.className = 'status-box disconnected';
-                statusBox.innerHTML = `
-                    <h4>Status: Not Connected</h4>
-                    <p>Please connect your MetaMask wallet to interact with the OQiLabs token.</p>
-                    <button id="connectBtn" class="btn btn-primary">Connect MetaMask</button>
-                `;
+                web3 = new Web3(window.ethereum);
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
                 
-                // Re-attach event listener to new button
-                document.getElementById('connectBtn').addEventListener('click', async () => {
-                    await initWeb3();
+                account = accounts[0];
+                isConnected = true;
+                
+                initContract();
+                updateUI();
+                await loadTokenData();
+                
+                // Set up listeners
+                window.ethereum.on('accountsChanged', (accounts) => {
+                    if (accounts.length === 0) {
+                        disconnectWallet();
+                    } else {
+                        account = accounts[0];
+                        loadTokenData();
+                    }
                 });
+                
+                window.ethereum.on('chainChanged', () => {
+                    window.location.reload();
+                });
+                
+            } catch (error) {
+                showError(error);
             }
         }
 
-        // Load token data from contract
+        async function disconnectWallet() {
+            account = null;
+            isConnected = false;
+            updateUI();
+        }
+
+        function initContract() {
+            contract = new web3.eth.Contract(contractABI, contractAddress);
+        }
+
+        // Token operations
         async function loadTokenData() {
             if (!isConnected) return;
             
             try {
-                // Basic token info
-                const name = await contract.methods.name().call();
-                const symbol = await contract.methods.symbol().call();
-                const totalSupply = await contract.methods.totalSupply().call();
-                const maxSupply = await contract.methods.MAX_SUPPLY().call();
-                const decimals = await contract.methods.decimals().call();
+                // Load balance
+                const balance = await contract.methods.balanceOf(account).call();
+                const formattedBalance = (balance / (10 ** decimals)).toFixed(2);
+                tokenBalance.textContent = formattedBalance;
+                walletAddress.value = account;
                 
-                document.getElementById('tokenName').value = name;
-                document.getElementById('tokenSymbol').value = symbol;
-                document.getElementById('totalSupply').value = `${formatNumber(totalSupply / (10 ** decimals))} / ${formatNumber(maxSupply / (10 ** decimals))}`;
-                
-                // User-specific info
-                const balance = await contract.methods.balanceOf(accounts[0]).call();
-                const currentReward = await contract.methods.getCurrentReward().call();
-                const lastMined = await contract.methods.lastMinedTime(accounts[0]).call();
-                const lockUntil = await contract.methods.lockUntil(accounts[0]).call();
-                
-                document.getElementById('userBalance').value = formatNumber(balance / (10 ** decimals));
-                document.getElementById('currentReward').value = formatNumber(currentReward / (10 ** decimals));
-                
-                // Calculate next mining time
+                // Load lock status
+                const lockUntil = await contract.methods.lockUntil(account).call();
                 const now = Math.floor(Date.now() / 1000);
-                const nextMining = lastMined > 0 ? parseInt(lastMined) + 57600 : 0;
-                const miningAvailable = nextMining <= now;
+                const isLocked = lockUntil > now;
                 
-                document.getElementById('nextMining').value = miningAvailable ? 
-                    "Available now" : 
-                    new Date(nextMining * 1000).toLocaleString();
+                lockStatus.textContent = isLocked ? `Locked until ${new Date(lockUntil * 1000).toLocaleDateString()}` : 'Unlocked';
+                lockStatus.className = `badge ${isLocked ? 'bg-warning' : 'bg-success'} status-badge`;
                 
-                // Lock status
-                document.getElementById('lockUntil').value = lockUntil > 0 ? 
-                    new Date(lockUntil * 1000).toLocaleString() : 
-                    "Not locked";
+                // Load cooldown status
+                const lastMined = await contract.methods.lastMinedTime(account).call();
+                const cooldown = await contract.methods.miningCooldown().call();
+                const nextMining = parseInt(lastMined) + parseInt(cooldown);
+                const canMine = nextMining <= now;
                 
-                // Enable/disable mine button based on cooldown
-                document.getElementById('mineBtn').disabled = !miningAvailable;
+                cooldownStatus.textContent = canMine ? 'Ready to mine' : `Cooldown until ${new Date(nextMining * 1000).toLocaleTimeString()}`;
+                cooldownStatus.className = `badge ${canMine ? 'bg-success' : 'bg-info'} status-badge`;
+                
+                // Update button states
+                mineBtn.disabled = !canMine;
+                transferBtn.disabled = isLocked;
                 
             } catch (error) {
-                console.error("Error loading token data:", error);
+                showError(error);
             }
         }
 
-        // Mine tokens function
         async function mineTokens() {
             if (!isConnected) return;
             
-            const miningStatus = document.getElementById('miningStatus');
-            miningStatus.innerHTML = '<div class="alert alert-info">Processing mining transaction...</div>';
-            
             try {
+                mineBtn.disabled = true;
+                mineBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Mining...';
+                
                 const miningFee = await contract.methods.MINING_FEE().call();
-                const miningFeeEth = web3.utils.fromWei(miningFee, 'ether');
                 
                 await contract.methods.mine().send({
-                    from: accounts[0],
+                    from: account,
                     value: miningFee
-                })
-                .on('transactionHash', (hash) => {
-                    miningStatus.innerHTML = `<div class="alert alert-info">Transaction sent: ${hash}</div>`;
-                })
-                .on('receipt', (receipt) => {
-                    miningStatus.innerHTML = '<div class="alert alert-success">Mining successful!</div>';
-                    loadTokenData(); // Refresh data
-                })
-                .on('error', (error) => {
-                    miningStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
                 });
                 
+                await loadTokenData();
+                mineBtn.innerHTML = '<i class="bi bi-hammer"></i> Mine Tokens';
+                
             } catch (error) {
-                miningStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                showError(error);
+                mineBtn.disabled = false;
+                mineBtn.innerHTML = '<i class="bi bi-hammer"></i> Mine Tokens';
             }
         }
 
-        // Transfer tokens function
-        async function transferTokens() {
-            if (!isConnected) return;
-            
-            const transferStatus = document.getElementById('transferStatus');
+        async function executeTransfer() {
             const recipient = document.getElementById('recipientAddress').value;
-            const amount = document.getElementById('transferAmount').value;
-            const decimals = await contract.methods.decimals().call();
+            const amount = parseFloat(document.getElementById('transferAmount').value);
             
-            if (!recipient || !amount) {
-                transferStatus.innerHTML = '<div class="alert alert-warning">Please fill all fields</div>';
+            if (!recipient || !amount || amount <= 0) {
+                showError("Please enter valid recipient and amount");
                 return;
             }
             
-            transferStatus.innerHTML = '<div class="alert alert-info">Processing transfer...</div>';
-            
             try {
-                const amountWei = web3.utils.toWei(amount, 'ether');
-                // Adjust for token decimals (assuming 8 decimals)
-                const amountWithDecimals = amount * (10 ** decimals);
+                confirmTransferBtn.disabled = true;
+                confirmTransferBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                
+                const amountWithDecimals = Math.floor(amount * (10 ** decimals));
                 
                 await contract.methods.transfer(recipient, amountWithDecimals.toString())
-                    .send({ from: accounts[0] })
-                    .on('transactionHash', (hash) => {
-                        transferStatus.innerHTML = `<div class="alert alert-info">Transaction sent: ${hash}</div>`;
-                    })
-                    .on('receipt', (receipt) => {
-                        transferStatus.innerHTML = '<div class="alert alert-success">Transfer successful!</div>';
-                        loadTokenData(); // Refresh data
-                    })
-                    .on('error', (error) => {
-                        transferStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-                    });
+                    .send({ from: account });
+                
+                transferModal.hide();
+                await loadTokenData();
                 
             } catch (error) {
-                transferStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
+                showError(error);
+            } finally {
+                confirmTransferBtn.disabled = false;
+                confirmTransferBtn.innerHTML = 'Transfer';
             }
         }
 
-        // Approve tokens function
-        async function approveTokens() {
+        // UI Helpers
+        function updateUI() {
+            if (isConnected) {
+                loginBtn.textContent = 'Disconnect';
+                loginBtn.className = 'btn nav-link text-danger';
+            } else {
+                loginBtn.textContent = 'Connect Wallet';
+                loginBtn.className = 'btn nav-link';
+                tokenBalance.textContent = '0.00';
+                walletAddress.value = '';
+                mineBtn.disabled = true;
+                transferBtn.disabled = true;
+            }
+        }
+
+        function generateQRCode() {
+            const qr = qrcode(0, 'L');
+            qr.addData('ethereum:' + (account || '0x0000000000000000000000000000000000000000'));
+            qr.make();
+            document.getElementById('qrCode').innerHTML = qr.createImgTag(4);
+        }
+
+        function copyAddress() {
             if (!isConnected) return;
             
-            const approveStatus = document.getElementById('approveStatus');
-            const spender = document.getElementById('spenderAddress').value;
-            const amount = document.getElementById('approveAmount').value;
-            const decimals = await contract.methods.decimals().call();
-            
-            if (!spender || !amount) {
-                approveStatus.innerHTML = '<div class="alert alert-warning">Please fill all fields</div>';
-                return;
-            }
-            
-            approveStatus.innerHTML = '<div class="alert alert-info">Processing approval...</div>';
-            
-            try {
-                const amountWei = web3.utils.toWei(amount, 'ether');
-                // Adjust for token decimals (assuming 8 decimals)
-                const amountWithDecimals = amount * (10 ** decimals);
-                
-                await contract.methods.approve(spender, amountWithDecimals.toString())
-                    .send({ from: accounts[0] })
-                    .on('transactionHash', (hash) => {
-                        approveStatus.innerHTML = `<div class="alert alert-info">Transaction sent: ${hash}</div>`;
-                    })
-                    .on('receipt', (receipt) => {
-                        approveStatus.innerHTML = '<div class="alert alert-success">Approval successful!</div>';
-                    })
-                    .on('error', (error) => {
-                        approveStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-                    });
-                
-            } catch (error) {
-                approveStatus.innerHTML = `<div class="alert alert-danger">Error: ${error.message}</div>`;
-            }
+            navigator.clipboard.writeText(account);
+            const copyBtn = document.querySelector('.btn-outline-secondary');
+            copyBtn.innerHTML = '<i class="bi bi-check"></i>';
+            setTimeout(() => {
+                copyBtn.innerHTML = '<i class="bi bi-clipboard"></i>';
+            }, 2000);
         }
 
-        // Helper function to format numbers
-        function formatNumber(num) {
-            return parseFloat(num).toLocaleString(undefined, {
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 8
-            });
+        function showError(error) {
+            console.error(error);
+            let errorMessage = typeof error === 'string' ? error : 
+                             error.message || 'An unknown error occurred';
+            
+            // Simplify common MetaMask errors
+            if (errorMessage.includes('User denied transaction')) {
+                errorMessage = 'Transaction was cancelled';
+            } else if (errorMessage.includes('insufficient funds')) {
+                errorMessage = 'Insufficient funds for transaction';
+            }
+            
+            document.getElementById('errorMessage').textContent = errorMessage;
+            errorModal.show();
         }
+
+        // Initialize theme
+        loadTheme();
     </script>
 </body>
 </html>
